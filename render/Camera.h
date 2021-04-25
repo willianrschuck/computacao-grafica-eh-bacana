@@ -8,6 +8,12 @@ public:
     Camera(Eigen::Vector3f position);
 
     Eigen::Matrix4f view();
+    Eigen::Matrix4f projection();
+
+    Eigen::Vector3f getPosition();
+
+    void zoomIn();
+    void zoomOut();
 
     void rotate(double x, double y);
     void moveFoward();
@@ -19,13 +25,18 @@ public:
 
 private:
     Eigen::Vector3f position;
+    Eigen::Matrix4f projectionMatrix;
 
     Eigen::Vector3f vx;
     Eigen::Vector3f vy;
     Eigen::Vector3f vz;
 
-    float yaw{};
-    float pitch{};
+    float zFar = 500.0f;
+    float zNear = 0.1f;
+    float fov = 1.134f;
+
+    float yaw;
+    float pitch;
 
 };
 

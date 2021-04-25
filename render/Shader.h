@@ -21,6 +21,7 @@ public:
     void setInt(const std::string &name, int value) const;
     void setFloat(const std::string &name, float value) const;
 
+    void setVec3(const std::string &name, float d, float d1, float d2);
 };
 
 #endif //LEARN_OPENGL_SHADER_H

@@ -4,18 +4,19 @@
 #include <iostream>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
+#include "Camera.h"
 
 class Context {
 public:
 
     Context();
-
     int init();
-
     GLFWwindow* currentWindow();
+    void setCamera(Camera* cam);
 
 private:
-    GLFWwindow* window;
+    GLFWwindow* window{};
+    Camera* camera{};
 
 };
 

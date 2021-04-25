@@ -1,4 +1,5 @@
 #include "Shader.h"
+#include <Eigen/Dense>
 
 Shader::Shader(const char *vertexPath, const char *fragmentPath) {
     std::string vertexCode;
@@ -81,5 +82,9 @@ void Shader::setInt(const std::string &name, int value) const {
 
 void Shader::setFloat(const std::string &name, float value) const {
     glUniform1f(glGetUniformLocation(id, name.c_str()), value);
+}
+
+void Shader::setVec3(const std::string &name, float d, float d1, float d2) {
+    glUniform3f(glGetUniformLocation(id, name.c_str()), d, d1, d2);
 }
 

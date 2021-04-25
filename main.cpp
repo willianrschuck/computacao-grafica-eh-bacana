@@ -9,6 +9,9 @@
 #include "render/stb_image.h"
 #include "render/Camera.h"
 
+Context context;
+Camera camera({0, 0, 3});
+
 void processarInputs(GLFWwindow* window, Camera* camera) {
 
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
@@ -32,31 +35,70 @@ void processarInputs(GLFWwindow* window, Camera* camera) {
 
 }
 
-Eigen::Matrix4f buildPerspectiveMatrix(float fov, float zNear, float zFar) {
-
-    Eigen::Matrix4f mat = Eigen::Matrix4f::Zero();
-    float halfFOV = tan(fov/2.0f);
-
-    mat(0,0) = 1.0f / (halfFOV * 8/6);
-    mat(1,1) = 1.0f / halfFOV;
-    mat(2,2) = (zNear+zFar) / (-zFar + zNear);
-    mat(2,3) = (2.0f * zNear * zFar) / (-zFar + zNear);
-    mat(3,2) = -1.0f;
-
-    return mat;
-
+void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
+    camera.rotate(xpos, ypos);
 }
 
-void mouse_callback(GLFWwindow* window, double xpos, double ypos);
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
+    if (yoffset > 0) {
+        camera.zoomIn();
+    } else if (yoffset < 0) {
+        camera.zoomOut();
+    }
+}
 
 int main() {
 
-    Context context;
     context.init();
 
     Shader program("../shaders/vertex.glsl", "../shaders/fragment.glsl");
+    Shader lightShader("../shaders/light_vertex.glsl", "../shaders/light_fragment.glsl");
 
     float vertices[] = {
+            -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+            0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+            0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+            0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+            -0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+            -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+
+            -0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+            0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+            0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+            0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+            -0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+            -0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+
+            -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+            -0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
+            -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
+            -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
+            -0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+            -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+
+            0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+            0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
+            0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
+            0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
+            0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+            0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+
+            -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+            0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+            0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+            0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+            -0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+            -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+
+            -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
+            0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
+            0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+            0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+            -0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+            -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f
+    };
+
+    float verticess[] = {
             -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
             0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
             0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
@@ -100,6 +142,52 @@ int main() {
             -0.5f,  0.5f, -0.5f,  0.0f, 1.0f
     };
 
+    float cube[] = {
+            -0.5f, -0.5f, -0.5f,
+            0.5f, -0.5f, -0.5f,
+            0.5f,  0.5f, -0.5f,
+            0.5f,  0.5f, -0.5f,
+            -0.5f,  0.5f, -0.5f,
+            -0.5f, -0.5f, -0.5f,
+
+            -0.5f, -0.5f,  0.5f,
+            0.5f, -0.5f,  0.5f,
+            0.5f,  0.5f,  0.5f,
+            0.5f,  0.5f,  0.5f,
+            -0.5f,  0.5f,  0.5f,
+            -0.5f, -0.5f,  0.5f,
+
+            -0.5f,  0.5f,  0.5f,
+            -0.5f,  0.5f, -0.5f,
+            -0.5f, -0.5f, -0.5f,
+            -0.5f, -0.5f, -0.5f,
+            -0.5f, -0.5f,  0.5f,
+            -0.5f,  0.5f,  0.5f,
+
+            0.5f,  0.5f,  0.5f,
+            0.5f,  0.5f, -0.5f,
+            0.5f, -0.5f, -0.5f,
+            0.5f, -0.5f, -0.5f,
+            0.5f, -0.5f,  0.5f,
+            0.5f,  0.5f,  0.5f,
+
+            -0.5f, -0.5f, -0.5f,
+            0.5f, -0.5f, -0.5f,
+            0.5f, -0.5f,  0.5f,
+            0.5f, -0.5f,  0.5f,
+            -0.5f, -0.5f,  0.5f,
+            -0.5f, -0.5f, -0.5f,
+
+            -0.5f,  0.5f, -0.5f,
+            0.5f,  0.5f, -0.5f,
+            0.5f,  0.5f,  0.5f,
+            0.5f,  0.5f,  0.5f,
+            -0.5f,  0.5f,  0.5f,
+            -0.5f,  0.5f, -0.5f,
+    };
+
+
+
     unsigned int VBO, VAO, EBO;
 
     glGenVertexArrays(1, &VAO);
@@ -114,10 +202,10 @@ int main() {
 //    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 //    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
 
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
 
 
@@ -132,6 +220,23 @@ int main() {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
+
+    unsigned int cVBO, cVAO;
+
+    glGenVertexArrays(1, &cVAO);
+    glGenBuffers(1, &cVBO);
+
+    glBindVertexArray(cVAO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, cVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(cube), cube, GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+    glEnableVertexAttribArray(0);
+
+
+
+
     int width, height, nrChannels;
     unsigned char *data = stbi_load("../container.jpg", &width, &height, &nrChannels, 0);
     if (data)
@@ -145,45 +250,67 @@ int main() {
     }
     stbi_image_free(data);
 
-    program.use();
-    program.setInt("ourTexture", 0);
-
-
-    Eigen::Matrix4f projMat = buildPerspectiveMatrix(30, 0.01f, 500.0f);
 
     Eigen::Affine3f transform(Eigen::Translation3f(0, 0, 0));
 
-    Camera camera({0, 0, 3});
+    Eigen::Affine3f lightModel(Eigen::Translation3f(0, 1, 2));
 
     glfwSetInputMode(context.currentWindow(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     glfwSetCursorPosCallback(context.currentWindow(), mouse_callback);
+    glfwSetScrollCallback(context.currentWindow(), scroll_callback);
 
     while (!glfwWindowShouldClose(context.currentWindow())) {
+
         processarInputs(context.currentWindow(), &camera);
 
-        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+        // glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glEnable(GL_DEPTH_TEST);
 
+        float red = (sin(glfwGetTime()) / 2) + 0.5;
+
+
+        Eigen::Vector3f camPos = camera.getPosition();
+
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, textureId);
+        program.use();
+        program.setInt("ourTexture", 0);
+        program.setVec3("objectColor", 1.0f, 0.5f, 0.31f);
+        program.setVec3("lightColor",  red, 0.5f, 1.0f);
+        program.setVec3("lightPos", 0, 1, 2);
+        program.setVec3("viewPos", camPos.x(), camPos.y(), camPos.z());
+
+        Eigen::Matrix4f viewMat = camera.view();
 
         unsigned int transformLoc = glGetUniformLocation(program.id, "model");
         glUniformMatrix4fv(transformLoc, 1, GL_FALSE, transform.data());
-
         unsigned int viewLoc = glGetUniformLocation(program.id, "view");
-        glUniformMatrix4fv(viewLoc, 1, GL_FALSE, camera.view().data());
+        glUniformMatrix4fv(viewLoc, 1, GL_FALSE, viewMat.data());
+        unsigned int projectionLoc = glGetUniformLocation(program.id, "projection");
+        glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, camera.projection().data());
 
-//        std::cout << camera.view() << std::endl;
+        glBindVertexArray(VAO);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
 
-        viewLoc = glGetUniformLocation(program.id, "projection");
-        glUniformMatrix4fv(viewLoc, 1, GL_FALSE, projMat.data());
+        lightShader.use();
+        lightShader.setVec3("lightColor", red, 0.5, 1);
 
         transform.rotate(Eigen::AngleAxisf(0.001, Eigen::Vector3f::UnitX()));
         transform.rotate(Eigen::AngleAxisf(-0.001, Eigen::Vector3f::UnitY()));
 
-        glBindVertexArray(VAO);
+        unsigned int transformLoc1 = glGetUniformLocation(program.id, "model");
+        glUniformMatrix4fv(transformLoc1, 1, GL_FALSE, lightModel.data());
+        unsigned int viewLoc1 = glGetUniformLocation(program.id, "view");
+        glUniformMatrix4fv(viewLoc1, 1, GL_FALSE, viewMat.data());
+        unsigned int projectionLoc1 = glGetUniformLocation(program.id, "projection");
+        glUniformMatrix4fv(projectionLoc1, 1, GL_FALSE, camera.projection().data());
+
+        glBindVertexArray(cVAO);
         glDrawArrays(GL_TRIANGLES, 0, 36);
+
 
         glfwSwapBuffers(context.currentWindow());
         glfwPollEvents();

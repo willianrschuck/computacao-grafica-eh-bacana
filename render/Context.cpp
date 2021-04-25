@@ -39,3 +39,7 @@ int Context::init() {
 GLFWwindow *Context::currentWindow() {
     return window;
 }
+
+void Context::setCamera(Camera *cam) {
+
+}
