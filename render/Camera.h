@@ -11,6 +11,7 @@ public:
     Eigen::Matrix4f projection();
 
     Eigen::Vector3f getPosition();
+    Eigen::Vector3f getDirection();
 
     void zoomIn();
     void zoomOut();

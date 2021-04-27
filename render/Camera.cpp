@@ -125,4 +125,8 @@ Eigen::Vector3f Camera::getPosition() {
     return position;
 }
 
+Eigen::Vector3f Camera::getDirection() {
+    return -vz;
+}
+
 
