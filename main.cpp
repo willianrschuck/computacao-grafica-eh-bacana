@@ -102,7 +102,7 @@ Texture createTexture(std::string type, std::string path) {
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
         glGenerateMipmap(GL_TEXTURE_2D);
     } else {
-        std::cout << "Failed to load texture" << std::endl;
+        std::cout << "Failed to load texture: " << path << std::endl;
     }
     stbi_image_free(data);
 
@@ -112,17 +112,24 @@ Texture createTexture(std::string type, std::string path) {
 Mesh createMesh(std::string name, std::string textura, std::string specularTex = "", std::string normalTex = "") {
 
     static Texture normal = createTexture("material.normalMap", "../texturas/normal.png");
+    static Texture solidBlack = createTexture("material.specularTexture", "../texturas/black.png");
 
     BasicObjLoader obj;
     obj.ler("../objetos/"+name+".obj");
     std::vector<Texture> tex;
     tex.push_back(createTexture("material.diffuseTexture", "../texturas/"+textura));
-    if (!specularTex.empty()) tex.push_back(createTexture("material.specularTexture", "../texturas/"+specularTex));
+
+    if (!specularTex.empty()) {
+        tex.push_back(createTexture("material.specularTexture", "../texturas/"+specularTex));
+    } else {
+        tex.push_back(solidBlack);
+    }
     if (!normalTex.empty()) {
         tex.push_back(createTexture("material.normalMap", "../texturas/"+normalTex));
     } else {
         tex.push_back(normal);
     }
+
     Mesh mesh(obj.vertices, obj.indices, tex);
     return mesh;
 
@@ -155,18 +162,33 @@ int main() {
     Mesh skybox(obj.vertices, obj.indices, sky);
 
     Model casa;
-
-    casa.addMesh(createMesh("casa/base", "stone-floor/color.jpg", "stone-floor/specular.jpg", "stone-floor/normal.jpg"));
-    casa.addMesh(createMesh("casa/chao-lajota", "tiles/color.jpg","tiles/specular.jpg", "tiles/normal.jpg"));
+    casa.addMesh(createMesh("casa/base", "terracota/color.jpg", "terracota/specular.jpg", "terracota/normal.jpg"));
+    casa.addMesh(createMesh("casa/chao-lajota", "tiles/color.jpg","tiles/specular.png", "tiles/normal.jpg"));
     casa.addMesh(createMesh("casa/chao-parque", "chao/color.jpg","chao/specular.jpg", "chao/normal.jpg"));
     casa.addMesh(createMesh("casa/fundacao", "brick/color.png", "brick/specular.png", "brick/normal.png"));
     casa.addMesh(createMesh("casa/gramado", "grass/color.jpg", "grass/specular.jpg", "grass/normal.jpg"));
     casa.addMesh(createMesh("casa/parede-exterior", "wall/color.jpg", "wall/specular.jpg", "wall/normal.jpg"));
     casa.addMesh(createMesh("casa/parede-interior", "interior.png"));
     casa.addMesh(createMesh("casa/parede-lajota", "lajota.png"));
-    casa.addMesh(createMesh("casa/teto", "telha/cor.jpg", "telha/specular.jpg", "telha/normal.jpg"));
+    casa.addMesh(createMesh("casa/teto", "telha/cor.jpg", "telha/specular.png", "telha/normal.jpg"));
 
-    Mesh xadrez = createMesh("brush", "grimstroke_weapon_color.tga", "grimstroke_weapon_specularMask.tga", "grimstroke_weapon_normal.tga");
+    Model brush;
+    brush.addMesh(createMesh("brush", "grimstroke-weapon/color.tga", "grimstroke-weapon/specular.tga", "grimstroke-weapon/normal.tga"));
+
+    Model queijo;
+    queijo.addMesh(createMesh("queijo", "queijo.png"));
+
+    Model xadrez;
+    xadrez.addMesh(createMesh("xadrez", "xadrez.png"));
+
+    Model armario;
+    armario.addMesh(createMesh("armario", "armario.png"));
+
+    Model bule;
+    bule.addMesh(createMesh("bule", "bule.png"));
+
+    Model copo;
+    copo.addMesh(createMesh("copo", "copo.png"));
 
     glfwSetInputMode(context.currentWindow(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     glfwSetCursorPosCallback(context.currentWindow(), mouse_callback);
@@ -238,6 +260,13 @@ int main() {
         glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, camera.projection().data());
 
         casa.Draw(program);
+
+        brush.Draw(program);
+        queijo.Draw(program);
+        xadrez.Draw(program);
+        armario.Draw(program);
+        bule.Draw(program);
+        copo.Draw(program);
 
         lightShader.use();
         lightShader.setVec3("lightColor", 1.0f, 0.5, 1);
