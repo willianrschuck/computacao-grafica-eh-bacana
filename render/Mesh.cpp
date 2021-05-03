@@ -3,6 +3,9 @@
 //
 
 #include "Mesh.h"
+#include "BasicObjLoader.h"
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
 
 Mesh::Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices, std::vector<Texture> textures) {
     this->vertices = vertices;
@@ -73,13 +76,13 @@ void Mesh::setupMesh() {
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int),
                  &indices[0], GL_STATIC_DRAW);
 
-    // vertex positions
+
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
-    // vertex normals
+
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, Normal));
-    // vertex texture coords
+
     glEnableVertexAttribArray(2);
     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, TexCoords));
 
@@ -90,4 +93,55 @@ void Mesh::setupMesh() {
     glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, BiTangent));
 
     glBindVertexArray(0);
+}
+
+Texture createTexture(std::string type, std::string path) {
+    Texture texture;
+    texture.type = type;
+    glGenTextures(1, &texture.id);
+    glBindTexture(GL_TEXTURE_2D, texture.id);
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+    int width, height, nrChannels;
+    unsigned char *data = stbi_load(path.c_str(), &width, &height, &nrChannels, 0);
+    if (data) {
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+    } else {
+        std::cout << "Failed to load texture: " << path << std::endl;
+    }
+    stbi_image_free(data);
+
+    return texture;
+}
+
+
+Mesh Mesh::createMesh(std::string name, std::string textura, std::string specularTex, std::string normalTex) {
+
+    static Texture normal = createTexture("material.normalMap", "../texturas/normal.png");
+    static Texture solidBlack = createTexture("material.specularTexture", "../texturas/black.png");
+
+    BasicObjLoader obj;
+    obj.ler("../objetos/"+name+".obj");
+    std::vector<Texture> tex;
+    tex.push_back(createTexture("material.diffuseTexture", "../texturas/"+textura));
+
+    if (!specularTex.empty()) {
+        tex.push_back(createTexture("material.specularTexture", "../texturas/"+specularTex));
+    } else {
+        tex.push_back(solidBlack);
+    }
+    if (!normalTex.empty()) {
+        tex.push_back(createTexture("material.normalMap", "../texturas/"+normalTex));
+    } else {
+        tex.push_back(normal);
+    }
+
+    Mesh mesh(obj.vertices, obj.indices, tex);
+    return mesh;
+
 }

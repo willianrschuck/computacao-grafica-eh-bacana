@@ -3,8 +3,7 @@
 #include <cmath>
 #include <GLFW/glfw3.h>
 
-#define velocity 5.0f
-#define rotation_velocity 0.001f
+#define ROTATION_ANGLE 0.001f
 
 static Eigen::Vector3f s2c(float phi, float theta) {
     return Eigen::Vector3f(cos(phi) * sin(theta), sin(phi), cos(phi) * cos(theta));
@@ -19,12 +18,12 @@ void updateDeltaTime() {
     deltaTime = delta;
 }
 
-Eigen::Matrix4f buildPerspectiveMatrix(float fov, float zNear, float zFar) {
+Eigen::Matrix4f buildPerspectiveMatrix(float fov, float zNear, float zFar, float aspectRatio) {
 
     Eigen::Matrix4f mat = Eigen::Matrix4f::Zero();
     float halfFOV = tan(fov/2.0f);
 
-    mat(0,0) = 1.0f / (halfFOV * 8/6);
+    mat(0,0) = 1.0f / (halfFOV * aspectRatio);
     mat(1,1) = 1.0f / halfFOV;
     mat(2,2) = (zNear+zFar) / (-zFar + zNear);
     mat(2,3) = (2.0f * zNear * zFar) / (-zFar + zNear);
@@ -34,14 +33,15 @@ Eigen::Matrix4f buildPerspectiveMatrix(float fov, float zNear, float zFar) {
 
 }
 
-Camera::Camera(Eigen::Vector3f thePosition) {
+Camera::Camera(Eigen::Vector3f thePosition, float theAspectRatio) {
     position = thePosition;
+    aspectRatio = theAspectRatio;
 
     vz = Eigen::Vector3f(0,0,1).normalized();
     vx = Eigen::Vector3f (0,1,0).cross(vz).normalized();
     vy = vz.cross(vx).normalized();
 
-    projectionMatrix = buildPerspectiveMatrix(fov, zNear, zFar);
+    projectionMatrix = buildPerspectiveMatrix(fov, zNear, zFar, aspectRatio);
 
 }
 
@@ -68,13 +68,13 @@ Eigen::Matrix4f Camera::projection() {
 void Camera::zoomIn() {
     fov -= 0.1f;
     if (fov < 0.224f) fov = 0.224f;
-    projectionMatrix = buildPerspectiveMatrix(fov, zNear, zFar);
+    projectionMatrix = buildPerspectiveMatrix(fov, zNear, zFar, aspectRatio);
 }
 
 void Camera::zoomOut() {
     fov += 0.1f;
     if (fov > 1.309f) fov = 1.309f;
-    projectionMatrix = buildPerspectiveMatrix(fov, zNear, zFar);
+    projectionMatrix = buildPerspectiveMatrix(fov, zNear, zFar, aspectRatio);
 }
 
 void Camera::rotate(double x, double y) {
@@ -85,11 +85,11 @@ void Camera::rotate(double x, double y) {
     oldX = x;
     oldY = y;
 
-    float new_pitch = pitch + (dy*rotation_velocity);
+    float new_pitch = pitch + (dy * ROTATION_ANGLE * rotationSpeed);
     if (abs(new_pitch) < M_PI_2)
         pitch = new_pitch;
 
-    yaw -= dx*rotation_velocity;
+    yaw -= dx * ROTATION_ANGLE * rotationSpeed;
 
     vz = s2c(pitch, yaw).normalized();
     vx = Eigen::Vector3f(0,1,0).cross(vz).normalized();
@@ -98,27 +98,27 @@ void Camera::rotate(double x, double y) {
 }
 
 void Camera::moveFoward() {
-    position -= vz * velocity * deltaTime;
+    position -= vz * walkSpeed * deltaTime;
 }
 
 void Camera::moveBack() {
-    position += vz * velocity * deltaTime;
+    position += vz * walkSpeed * deltaTime;
 }
 
 void Camera::moveLeft() {
-    position -= vx * velocity * deltaTime;
+    position -= vx * walkSpeed * deltaTime;
 }
 
 void Camera::moveRight() {
-    position += vx * velocity * deltaTime;
+    position += vx * walkSpeed * deltaTime;
 }
 
 void Camera::moveUp() {
-    position += vy * velocity * deltaTime;
+    position += vy * walkSpeed * deltaTime;
 }
 
 void Camera::moveDown() {
-    position -= vy * velocity * deltaTime;
+    position -= vy * walkSpeed * deltaTime;
 }
 
 Eigen::Vector3f Camera::getPosition() {
@@ -127,6 +127,11 @@ Eigen::Vector3f Camera::getPosition() {
 
 Eigen::Vector3f Camera::getDirection() {
     return -vz;
+}
+
+void Camera::newViewAspectRatio(float i) {
+    aspectRatio = i;
+    projectionMatrix = buildPerspectiveMatrix(fov, zNear, zFar, aspectRatio);
 }
 
 

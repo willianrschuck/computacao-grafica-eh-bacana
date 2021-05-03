@@ -5,7 +5,7 @@
 
 class Camera {
 public:
-    Camera(Eigen::Vector3f position);
+    Camera(Eigen::Vector3f position,  float theAspectRatio);
 
     Eigen::Matrix4f view();
     Eigen::Matrix4f projection();
@@ -24,6 +24,11 @@ public:
     void moveUp();
     void moveDown();
 
+    float walkSpeed = 5.0f;
+    float rotationSpeed = 1.0f;
+
+    void newViewAspectRatio(float i);
+
 private:
     Eigen::Vector3f position;
     Eigen::Matrix4f projectionMatrix;
@@ -36,9 +41,10 @@ private:
     float zNear = 0.1f;
     float fov = 1.134f;
 
-    float yaw;
-    float pitch;
+    float yaw{};
+    float pitch{};
 
+    float aspectRatio = 1.0f;
 };
 
 
