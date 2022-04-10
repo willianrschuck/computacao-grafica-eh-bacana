@@ -128,6 +128,12 @@ int main() {
     Model copo;
     copo.addMesh(Mesh::createMesh("copo", "copo.png"));
 
+    Model carro1;
+    carro1.addMesh(Mesh::createMesh("carro1", "carro1.png"));
+
+    Model carro2;
+    carro2.addMesh(Mesh::createMesh("carro2", "carro2.png"));
+
     /* Inicialização dos valores do Shader */
     {
         program.use();
@@ -191,6 +197,8 @@ int main() {
         armario.Draw(program);
         bule.Draw(program);
         copo.Draw(program);
+        carro1.Draw(program);
+        carro2.Draw(program);
 
         Eigen::Matrix4f m = viewMat;
         m(0,3) = 0;

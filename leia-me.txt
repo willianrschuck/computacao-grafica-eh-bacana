@@ -1,0 +1,9 @@
+P -> "Pausa" e exibe o menu
+Esc -> Fecha a aplicação (se não estiver pausado)
+Mouse Scroll -> Controla o FOV
+WASD Left Shift e Left Ctrl -> Movimentação
+A velocidade da camera é relativa ao delta sendo independente do FPS
+
+Implementado:
+Light Shading (textura, specular e normal maping)
+Cube Map

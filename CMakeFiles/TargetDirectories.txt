@@ -1,0 +1,4 @@
+/home/willian/CLionProjects/learn-opengl/CMakeFiles/edit_cache.dir
+/home/willian/CLionProjects/learn-opengl/CMakeFiles/ImGui.dir
+/home/willian/CLionProjects/learn-opengl/CMakeFiles/rebuild_cache.dir
+/home/willian/CLionProjects/learn-opengl/CMakeFiles/learn_opengl.dir
